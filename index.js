@@ -14,11 +14,13 @@ function runCommand (commandString, options) {
     console.log(errorString)
   }
   if (cmd.status != 0) {
-    throw new Error("Unsuccessful cmd: " + commandString);
+    throw new Error("Unsuccessful cmd: " + commandString + "\n" + errorString);
   }
+  return errorString;
 }
 
 exports.handler = async function (event, context, callback) {
+  var results = [];
   // install git binary
   await require('lambda-git')()
   event.names.map(function(name) {
@@ -53,10 +55,19 @@ exports.handler = async function (event, context, callback) {
       const envRepositoryURL = `https://${envUsername}:${envToken}@${env}.transposit.com/git/transposit/${name}`
       runCommand(`git remote add ${env} ${envRepositoryURL}`)
       console.log(`pushing ${name} to ${env}!`)
-      runCommand(`git push ${env} master -f`)
-      runCommand(`git push ${env} -f --tags`)
+      var pushResult = runCommand(`git push ${env} master -f`);
+      var pushTagsResult = runCommand(`git push ${env} -f --tags`);
+
+      if(pushResult !== "Everything up-to-date\n") {
+        results.push(pushResult.split("\n").splice(2).join("\n"))
+      }
+
+      if(pushResult !== "Everything up-to-date\n") {
+        results.push(pushTagsResult.split("\n").splice(2).join("\n"))
+      }
+
     });
   });
 
-  callback(null, 'success!')
+  callback(null, results)
 }
