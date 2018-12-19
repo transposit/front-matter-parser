@@ -52,7 +52,10 @@ exports.handler = async function (event, context, callback) {
         default:
           throw new Error("env must be either demo, api, or staging");
       }
-      const envRepositoryURL = `https://${envUsername}:${envToken}@console.${env}.transposit.com/git/transposit/${name}`
+      
+      const envPrefix = env === "api" ? "console" : `console.${env}`;
+      const envRepositoryURL = `https://${envUsername}:${envToken}@${envPrefix}.transposit.com/git/transposit/${name}`;
+      
       runCommand(`git remote add ${env} ${envRepositoryURL}`)
       console.log(`pushing ${name} to ${env}!`)
       var pushResult = runCommand(`git push ${env} master -f`);
