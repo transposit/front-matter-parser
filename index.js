@@ -30,7 +30,7 @@ exports.handler = async function (event, context, callback) {
     const dest = `/tmp/app_${name}`;
     runCommand(`rm -rf ${dest}`)
     // clone the repository and set it as the cwd
-    const gitRepositoryURL = `https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/transposit/app_${name}.git`
+    const gitRepositoryURL = `https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/transposit-connectors/${name}.git`
     runCommand(`git clone ${gitRepositoryURL}`)
     process.chdir(dest);
 
