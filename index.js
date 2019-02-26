@@ -19,58 +19,87 @@ function runCommand (commandString, options) {
   return errorString;
 }
 
-exports.handler = async function (event, context, callback) {
+function sync(service, event) {
+  var name = service.name;
+  var maintainer = service.maintainer;
+  // change the cwd to /tmp
+  process.chdir('/tmp')
+  // remove the dir if it's already in tmp
+  const dest = `/tmp/${name}`;
+  runCommand(`rm -rf ${dest}`)
+  // clone the repository and set it as the cwd
+  const gitRepositoryURL = `https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/transposit-connectors/${name}.git`
+  runCommand(`git clone ${gitRepositoryURL}`)
+  process.chdir(dest);
+
   var results = [];
-  // install git binary
-  await require('lambda-git')()
-  event.names.map(function(name) {
-    // change the cwd to /tmp
-    process.chdir('/tmp')
-    // remove the dir if it's already in tmp
-    const dest = `/tmp/${name}`;
-    runCommand(`rm -rf ${dest}`)
-    // clone the repository and set it as the cwd
-    const gitRepositoryURL = `https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/transposit-connectors/${name}.git`
-    runCommand(`git clone ${gitRepositoryURL}`)
-    process.chdir(dest);
 
-    event.env.map(function(env) {
-      let envToken, envUsername;
-      switch(env) {
-        case "demo":
-          envToken = DEMO_TOKEN;
-          envUsername = DEMO_USERNAME;
-        break;
-        case "api":
-          envToken = API_TOKEN;
-          envUsername = API_USERNAME;
-        break;
-        case "staging":
-          envToken = STAGING_TOKEN;
-          envUsername = STAGING_USERNAME;
-        break;
-        default:
-          throw new Error("env must be either demo, api, or staging");
-      }
-      
-      const envPrefix = env === "api" ? "console" : `console.${env}`;
-      const envRepositoryURL = `https://${envUsername}:${envToken}@${envPrefix}.transposit.com/git/transposit/${name}`;
-      
-      runCommand(`git remote add ${env} ${envRepositoryURL}`)
-      console.log(`pushing ${name} to ${env}!`)
-      var pushResult = runCommand(`git push ${env} master -f`);
-      var pushTagsResult = runCommand(`git push ${env} -f --tags`);
+  event.env.map(function(env) {
+    let envToken, envUsername;
+    switch(env) {
+      case "demo":
+        envToken = DEMO_TOKEN;
+        envUsername = DEMO_USERNAME;
+      break;
+      case "api":
+        envToken = API_TOKEN;
+        envUsername = API_USERNAME;
+      break;
+      case "staging":
+        envToken = STAGING_TOKEN;
+        envUsername = STAGING_USERNAME;
+      break;
+      default:
+        throw new Error("env must be either demo, api, or staging");
+    }
+    
+    const envPrefix = env === "api" ? "console" : `console.${env}`;
+    const envRepositoryURL = `https://${envUsername}:${envToken}@${envPrefix}.transposit.com/git/${maintainer}/${name}`;
+    
+    runCommand(`git remote add ${env} ${envRepositoryURL}`)
+    console.log(`pushing ${name} to ${env}!`)
 
-      if(pushResult !== "Everything up-to-date\n") {
-        results.push(pushResult.split("\n").splice(2).join("\n"))
-      }
+    var pushResult;
+    var pushTagsResult;
+    try {
+      pushResult = runCommand(`git push ${env} master -f`);
+      pushTagsResult = runCommand(`git push ${env} -f --tags`);
+    } catch (err) {
+      results.push(name + ": " + err);
+      return;
+    }
 
-      if(pushResult !== "Everything up-to-date\n") {
-        results.push(pushTagsResult.split("\n").splice(2).join("\n"))
-      }
+    if(pushResult !== "Everything up-to-date\n") {
+      console.log("here");
+      results.push(name + ": " + pushResult.split("\n").splice(2).join("\n"));
+    }
 
-    });
+    if(pushTagsResult !== "Everything up-to-date\n") {
+      results.push(name + ": " + pushTagsResult.split("\n").splice(2).join("\n"));
+    }
   });
 
-  callback(null, results)
+  console.log("results: " + results);
+  return results;
+}
+
+exports.handler = async function (event, context, callback) {
+  var allResults = [];
+  // install git binary
+  await require('lambda-git')()
+
+  // Sample apps
+  event.services && event.services.map(function(service) {
+    var servicesResults = sync(service, event);
+    allResults = allResults.concat(servicesResults);
+  });
+  
+  // Global services
+  event.names && event.names.map(function(name) {
+    var service = {name: name, maintainer: "transposit"};
+    var namesResults = sync(service, event);
+    allResults = allResults.concat(namesResults);
+  });
+
+  callback(null, allResults);
 }
