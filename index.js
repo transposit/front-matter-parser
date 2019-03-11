@@ -70,7 +70,7 @@ function sync(service, event) {
     }
 
     if(pushResult !== "Everything up-to-date\n") {
-      var nameToEnv = `${name} -> ${env}: `;
+      var nameToEnv = `${name} -> ${env.toUpperCase()}: `;
       results.push(nameToEnv + pushResult.split("\n").splice(2).join("\n"));
     }
 
