@@ -70,12 +70,12 @@ function sync(service, event) {
     }
 
     if(pushResult !== "Everything up-to-date\n") {
-      console.log("here");
-      results.push(name + ": " + pushResult.split("\n").splice(2).join("\n"));
+      var nameToEnv = `${name} -> ${env}: `;
+      results.push(nameToEnv + pushResult.split("\n").splice(2).join("\n"));
     }
 
     if(pushTagsResult !== "Everything up-to-date\n") {
-      results.push(name + ": " + pushTagsResult.split("\n").splice(2).join("\n"));
+      results.push(nameToEnv + pushTagsResult.split("\n").splice(2).join("\n"));
     }
   });
 
