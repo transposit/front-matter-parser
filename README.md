@@ -1,9 +1,6 @@
 ## How to deploy:
 
 ```
-npm install
-zip -r ../githubSync.zip *
+npm install; zip -r ../tina-service-parser.zip *
+AWS_PROFILE=tina-sandbox-lambda aws lambda update-function-code --function-name tina-service-parser --zip-file fileb://../tina-service-parser.zip
 ```
-
-upload zip file here: 
-https://us-west-2.console.aws.amazon.com/lambda/home?region=us-west-2#/functions/githubSyncToDemo?tab=graph
