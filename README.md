@@ -6,7 +6,7 @@ AWS_PROFILE=tina-sandbox-lambda aws lambda update-function-code --function-name 
 ```
 
 My Transposit app that uses this is:
-https://console.staging.transposit.com/t/tina/service_parserhttps://console.staging.transposit.com/t/tina/service_parser
+https://console.staging.transposit.com/t/tina/service_parser
 
 And some example SQL to call it is:
 ```
