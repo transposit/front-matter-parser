@@ -2,8 +2,14 @@ const fm = require('front-matter');
 const CryptoJS = require("crypto-js");
 
 exports.handler = async function (event, context, callback) {
-  var parsedWordArray = CryptoJS.enc.Base64.parse(event.body.replace(/\n/g,""));
+  var content = JSON.parse(event.body).content;
+  var parsedWordArray = CryptoJS.enc.Base64.parse(content.replace(/\n/g,""));
   var parsedStr = parsedWordArray.toString(CryptoJS.enc.Utf8);
+  console.log(fm(parsedStr));
 
-  callback(null, fm(parsedStr));
+  callback(null, {
+    "isBase64Encoded": false,
+    "statusCode": 200,
+    "body": JSON.stringify(fm(parsedStr))
+  });
 }
