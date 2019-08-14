@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "lambda-git": "^0.1.2"
+    "crypto-js": "^3.1.9-1",
+    "front-matter": "^3.0.2"
   },
   "devDependencies": {},
   "scripts": {
