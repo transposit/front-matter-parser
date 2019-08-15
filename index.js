@@ -3,9 +3,13 @@ const CryptoJS = require("crypto-js");
 
 exports.handler = async function (event, context, callback) {
   var content = JSON.parse(event.body).content;
-  var parsedWordArray = CryptoJS.enc.Base64.parse(content.replace(/\n/g,""));
-  var parsedStr = parsedWordArray.toString(CryptoJS.enc.Utf8);
-  console.log(fm(parsedStr));
+  var parsedStr;
+  if (event.queryStringParameters && event.queryStringParameters.base64 === 'true') {
+    var parsedWordArray = CryptoJS.enc.Base64.parse(content.replace(/\n/g,""));
+    parsedStr = parsedWordArray.toString(CryptoJS.enc.Utf8);
+  } else {
+    parsedStr = content;
+  }
 
   callback(null, {
     "isBase64Encoded": false,
